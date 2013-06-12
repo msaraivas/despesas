@@ -1,0 +1,67 @@
+<div class="topo-table">
+    <a class="btn btn-success">Novo Contato</a>
+
+    <div class="btn-group">
+        <button class="btn">005</button>
+        <button data-toggle="dropdown" class="btn dropdown-toggle"><span class="caret"></span></button>
+        <ul class="dropdown-menu pull-right" style="min-width: 74px">
+            <li class="active"><a href="#">005</a></li>
+            <li><a href="#">010</a></li>
+            <li><a href="#">025</a></li>
+            <li><a href="#">050</a></li>
+            <li><a href="#">100</a></li>
+        </ul>
+    </div>
+
+    <div class="input-append pull-right">
+        <form>
+            <input class="span2" placeholder="Localizar" id="appendedInputButtons" type="text">
+            <button class="btn" type="button">Telefone</button>
+            <button class="btn" type="button">Nome</button>
+        </form>
+    </div>
+</div>
+
+<br />
+
+<div class="corpo-table">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Nome</th>
+                <th>Tel. Principal</th>
+                <th>Qua.</th>
+                <th>Data Criação</th>  
+                <th>Ação</th>  
+            </tr>
+        </thead>
+        <tbody>
+            <?php for ($i = 1; $i <= 5; $i++): ?>
+                <tr>
+                    <td><?php echo $i; ?></td>
+                    <td>Fortaleza Ceará Brasil</td>
+                    <td>(085)85858585</td>
+                    <td>2</td>
+                    <td>29/01/2013</td>
+                    <td>
+                        <a class="btn btn-mini btn-info" href="">Visualizar</a>
+                        <a class="btn btn-mini btn-warning" href="">Editar</a>
+                        <a class="btn btn-mini btn-danger" href="">Apagar</a>
+                    </td>
+                </tr>
+            <?php endfor; ?>
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <ul>
+            <li><a href="#">Anterior</a></li>
+            <li class="active"><a href="#">1</a></li>
+            <li><a href="#">2</a></li>
+            <li><a href="#">3</a></li>
+            <li><a href="#">4</a></li>
+            <li><a href="#">Próximo</a></li>
+        </ul>
+    </div>
+</div>
