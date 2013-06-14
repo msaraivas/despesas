@@ -1,10 +1,13 @@
 <?php
 
+namespace Despesa; // referente ao doctrine
+
 return array(
     # definir controllers
     'controllers' => array(
         'invokables' => array(
-            'HomeController' => 'Despesa\Controller\HomeController'
+            'HomeController' => 'Despesa\Controller\HomeController',
+            'DespesasController' => 'Despesa\Controller\DespesasController',
         ),
     ),
 
@@ -21,6 +24,20 @@ return array(
                     ),
                 ),
             ),
+            'despesas' => array(
+                'type'      => 'segment',
+                'options'   => array(
+                    'route'    => '/despesas[/:action][/:id]',
+                    'constraints' => array(
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                        'id'     => '[0-9]+',
+                    ),
+                    'defaults' => array(
+                        'controller' => 'DespesasController',
+                        'action'     => 'index',
+                    ),
+                ),
+            ),           
         ),
     ),
 
@@ -49,4 +66,22 @@ return array(
             __DIR__ . '/../view',
         ),
     ),
+    
+
+    'doctrine' => array(
+        'driver' => array(
+            __NAMESPACE__ . '_driver' => array(
+                'class' => 'Doctrine\ORM\Mapping\Driver\AnnotationDriver',
+                'cache' => 'array',
+                'paths' => array(__DIR__ . '/../src/' . __NAMESPACE__ . '/Entity')
+            ),
+            'orm_default' => array(
+                'drivers' => array(
+                    __NAMESPACE__ . '\Entity' => __NAMESPACE__ . '_driver'
+                )
+            )
+        )
+    )
+
+
 );

@@ -1,0 +1,527 @@
+<?php
+// Incluindo arquivo de conexão/configuração
+require_once('config/conn.php');
+
+// Instanciando novo objeto da classe Login
+$objLogin = new Login();
+
+// Verificando se o usuário está logado, caso contrá será redirecionado para a página de login
+if (!$objLogin->verificar('index.html'))
+    // Finalizado o script, apenas para garantir que o usuário irá ver o conteúdo da página
+    exit;
+
+?>
+<html>
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" 
+    "http://www.w3.org/TR/html4/strict.dtd">
+  <head>
+    <link href="themes/redmond/jquery-ui-1.10.3.custom.css" rel="stylesheet">                                             
+    <link rel="stylesheet" type="text/css" href="css/footable/footable-0.1.css" />
+    <link rel="stylesheet" type="text/css" href="scripts/jtable.2.3.0/themes/jqueryui/jtable_jqueryui.css" />
+    <link rel="stylesheet" type="text/css" href="scripts/jtable.2.3.0/themes/jqueryui/jtable_jqueryui.min.css" />
+    <link rel="stylesheet" type="text/css" href="scripts/jqplot/jquery.jqplot.css" />
+    <link rel="stylesheet" type="text/css" href="scripts/jqplot/jquery.jqplot.min.css"/>
+
+    <style>
+        div.filtering
+        {
+            border: 1px solid #999;
+            margin-bottom: 5px;
+            padding: 5px;
+            background-color: #EEE;
+            width: 780px;
+            font-size: 10px;
+        }   
+        body {font-size: 13px;}
+        .tdjtable { font-size: 13px;}
+        div.displayLogin { float: right; margin-right: 10px;}
+        div.displayTitulo { text-align: center;font-size: 13px; }
+    </style>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js" type="text/javascript"></script>   
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" type="text/javascript"></script>		
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.js" type="text/javascript"></script>       
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js" type="text/javascript"></script> 
+    
+    <script src="scripts/jtable.2.3.0/jquery.jtable.js" type="text/javascript"></script>
+    <script src="scripts/selectbox/jquery.selectboxes.js" type="text/javascript"></script>
+    <script src="scripts/selectbox/jquery.selectboxes.min.js" type="text/javascript"></script>
+    <script src="scripts/selectbox/jquery.selectboxes.pack.js" type="text/javascript"></script> 
+
+    <script src="scripts/footable/footable-0.1.js" type="text/javascript"></script>
+
+    <script src="scripts/jqplot/jquery.jqplot.js"  type="text/javascript"></script>
+    <script src="scripts/jqplot/jquery.jqplot.min.js"  type="text/javascript"></script>        
+    <script src="scripts/jqplot/jqplot.barRenderer.min.js" type="text/javascript" ></script>
+    <script src="scripts/jqplot/jqplot.categoryAxisRenderer.min.js" type="text/javascript" ></script>
+    <script src="scripts/jqplot/jqplot.pointLabels.min.js" type="text/javascript" ></script>
+    <script src="scripts/jqplot/jqplot.json2.min.js" type="text/javascript" ></script>
+
+        
+    <script type="text/javascript">
+        $(function(){
+                $( "#tabs" ).tabs();  
+                $( "button" ).button();
+               // $( "select" ).selecter();
+        });
+    </script>
+  
+   
+  </head>
+  <body>
+      
+
+    <script type="text/javascript">
+
+
+        $(document).ready(function () {
+            date = new Date();
+            mes = date.getMonth();
+            ano = date.getFullYear();
+            mes = mes + 1; 
+            
+//  ******* Lancamentos **************************************************************************          
+          
+           //Prepare jTable                    
+            $('#PeopleTableContainer').jtable({
+                title: 'Tabela de despesas',
+                paging: true,
+                pageSize: 15,
+                pageSizes: [5,10,15,20],
+                sorting: true,
+                defaultSorting: 'dtdespesa DESC',
+                jqueryuiTheme: true,                
+                actions: {
+                    listAction:   'PersonActionsPagedSorted.php?action=listlancamentos',
+                    createAction: 'PersonActionsPagedSorted.php?action=create',
+                    updateAction: 'PersonActionsPagedSorted.php?action=update',
+                    deleteAction: 'PersonActionsPagedSorted.php?action=delete'                                        
+                },        
+                fields: {
+                    id: {
+                        key: true,
+                        create: false,
+                        edit: false,
+                        list: false
+                    },
+                    coditem: {
+                        title: 'Item',
+                        listClass: 'tdjtable',
+                        //width: '30%',
+                       // list: false,
+                        options: 'DespesaItemAction.php?action=listitemoption'                                                                                                                   
+                    },                                        
+                    codsubitem: {
+                        title: 'Subitem',
+                        listClass: 'tdjtable',
+                        //width: '30%',
+                        dependsOn: 'coditem',
+                        //options: 'DespesaSubitemAction.php?action=listsubitemoption&coditem=3'
+
+                        options: function(data) {
+                            if (data.source == 'list') {
+                               //Return url of all cities for optimization. 
+                                return 'DespesaSubitemAction.php?action=listsubitemoption2&coditem=a';
+                            }
+                            //This code runs when user opens edit/create form or changes country combobox on an edit/create form.
+                            return 'DespesaSubitemAction.php?action=listsubitemoption&coditem='+data.dependedValues.coditem;
+                        }					
+                    },                                    
+                    valdespesa: {
+                        title: 'Valor',
+                        listClass: 'tdjtable'
+                        //width: '20%'
+                    },                                        
+                    dtdespesa: {
+                        title: 'Data',
+                        listClass: 'tdjtable',
+                        //width: '20%',
+                        type: 'date',
+                        displayFormat: 'dd/mm/yy'
+                    }
+                }
+            });         
+                   
+           
+            //Re-load records when user click 'load records' button.
+            $('#LoadRecordsButton').click(function (e) {
+                e.preventDefault();
+                $('#PeopleTableContainer').jtable('load', {
+                    coditem:    $('#listitem option:selected').val(),                    
+                    codsubitem: $('#listsubitem option:selected').val(),
+                    dtdespesa:  $('#dtdespesa').val(),
+                    anodespesa:  $('#anodespesa').val()
+                }); 
+            });
+            
+
+            $('#dtdespesa').val('0'+mes);
+            //Load all records when page is first shown
+            $('#LoadRecordsButton').click();
+            $("#listitem").ajaxAddOption("PersonActionsPagedSorted.php?action=listitem&tipo=lanc",{},false,'',{});
+            $('#listitem').change(function(){
+                $("#listsubitem").removeOption(/./);
+                if ($('#listitem').val() != 0) {
+                    //$("#listsubitem").removeOption(/./);
+                    $("#listsubitem").ajaxAddOption("PersonActionsPagedSorted.php?action=listsubitem&tipo=lanc&coditem="+ $("#listitem option:selected").val(),{},false,'',{});                                                    //alert("teste"+ $("#listitem option:selected").val());
+                } 
+            });            
+            
+// fim Lançamentos **************************************************************************            
+            
+                      
+            
+// *********   Tabela  **************************************************************************** 
+
+            $('#li2').click(function () {       
+                // alimenta tabela mensal
+                $('#mesTab1').val('0'+mes);                
+                var dataRendered1 = $.ajax({
+                    async: false,
+                    url: 'PersonActionsPagedSorted.php?action=listtabela&mesTab1='+$('#mesTab1 option:selected').val()+'&anoTab1='+$('#anoTab1 option:selected').val(),
+                    dataType: 'html',
+                    success: function(data) {
+                        if (data.length) {
+                            tabhtml1 = data;
+                        }
+                    }
+                }); 
+                $("#tab1").html(tabhtml1);    
+            });
+            $('#ButtonTab1').click(function (e) {
+                e.preventDefault();
+                var dataRendered1 = $.ajax({
+                    async: false,
+                    url: 'PersonActionsPagedSorted.php?action=listtabela&mesTab1='+$('#mesTab1 option:selected').val()+'&anoTab1='+$('#anoTab1 option:selected').val(),
+                    dataType: 'html',
+                    success: function(data) {
+                        if (data.length) {
+                            tabhtml1 = data;
+                        }
+                    }
+                }); 
+                $("#tab1").html(tabhtml1);                          
+            });              
+
+// Fim Tabela **********************************************************************************
+
+            
+// Gerar Graficos  *******************************************************************            
+           
+            $('#li3').click(function () {  
+                
+                $("#chart2").html('');
+                $("#chart3").html('');
+                $("#chart4").html('');
+                var ajaxDataRenderer = function(url, plot, options) {
+                    var ret = null;
+                    $.ajax({
+                        // have to use synchronous here, else the function 
+                        // will return before the data is fetched
+                        async: false,
+                        url: url,
+                        dataType:"json",
+                        success: function(data) {
+                            ret = data;
+                        }
+                    });
+                    return ret;
+                };
+
+/*              // The url for our json data
+                var jsonurl2 = "jsondata2.txt";
+                var jsonurl = "jsondata.txt";
+                var ticks = ["Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                var ticks2 = ["Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+                //function envia(){  $.get('PersonActionsPagedSorted.php?action=listtotalmes', function(data){ ticks1 = data.split(','); alert('2'+ticks1);} );return ticks1;}; 
+                //var plot2 = $.jqplot('chart1', jsonurl2,{
+                  //  title: "Despesas por Itens",
+                 //   dataRenderer: ajaxDataRenderer,         
+                 //       dataRendererOptions: {                 
+                 //   }
+              //  });            
+*/           
+                // $.jqplot.config.enablePlugins = true;
+                var valitem = [];
+                var descitem = [];
+                var dataRendered1 = $.ajax({
+                    async: false,
+                    url: 'PersonActionsPagedSorted.php?action=listtotalitem&tipo=anual&ano='+ano,
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.length) {
+                            valitem = data[0];
+                            descitem = data[1];                        
+                        }
+                    }
+                }); 
+                
+                var plot1 = $.jqplot('chart2', [valitem], {
+                    //animate: !$.jqplot.use_excanvas,
+                    seriesDefaults:{
+                        renderer:$.jqplot.BarRenderer,
+                        pointLabels: {
+                            show: true
+                        },
+                        rendererOptions: {
+                            barWidth: 12
+                        }
+                    },
+                    title:'Despesa por Itens ('+ano+')',
+                    axes: {
+                        xaxis: {
+                            renderer: $.jqplot.CategoryAxisRenderer,
+                            ticks: descitem,
+                            //label: "ITENS",
+                            tickOptions:{textColor : 'rgb(39, 125, 175)', fontSize: '9pt'}
+                        },
+                        yaxis: {
+                            label: "Valor (R$)",
+                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+                            tickOptions:{textColor : 'rgb(39, 125, 175)', fontSize: '9pt'}
+                        }
+                    }
+                    //highlighter: { show: true }
+                }); 
+          
+// grafico mensal por itens *******************************************************************  
+ 
+                var valitemm = [];
+                var descitemm = [];
+                var dataRendered1 = $.ajax({
+                    async: false,
+                    url: 'PersonActionsPagedSorted.php?action=listtotalitem&tipo=mensal&mes='+mes+'&ano='+ano,
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.length) {
+                            valitemm = data[0];
+                            descitemm = data[1];                        
+                        }
+                    }
+                });             
+            
+                var plot1 = $.jqplot('chart4', [valitemm], {
+                    //animate: !$.jqplot.use_excanvas,
+                    seriesDefaults:{
+                        renderer:$.jqplot.BarRenderer,
+                        pointLabels: {
+                            show: true
+                        },
+                        rendererOptions: {
+                            barWidth: 12
+                        }
+                    },
+                    title:'Despesa do Mes ('+mes+'/'+ano+')',
+                    axes: {
+                        xaxis: {
+                            renderer: $.jqplot.CategoryAxisRenderer,
+                            ticks: descitemm,
+                            //label: "ITENS",
+                            tickOptions:{textColor : 'rgb(39, 125, 175)', fontSize: '9pt'}
+                        },
+                        yaxis: {
+                            label: "Valor (R$)",
+                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+                            tickOptions:{textColor : 'rgb(39, 125, 175)', fontSize: '9pt'}
+                        }
+                    }
+                    //highlighter: { show: true }
+                }); 
+
+// grafico geral por mes *******************************************************************  
+
+                var valmes = [];
+                var descmes = [];
+                var dataRendered1 = $.ajax({
+                    async: false,
+                    url: 'PersonActionsPagedSorted.php?action=listtotalmes&ano='+ano,
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.length) {
+                            valmes = data[0];
+                            descmes = data[1];
+                        }
+                    }
+                }); 
+                var plot1 = $.jqplot('chart3', [valmes], {
+                    //animate: !$.jqplot.use_excanvas,
+                    seriesDefaults:{
+                        //renderer:$.jqplot.BarRenderer,
+                        pointLabels: {
+                            show: true
+                        },
+                        rendererOptions: {
+                            barWidth: 12
+                        }
+                    },
+                    title:'Despesa Mensal ('+ano+')',
+                    axes: {
+                        xaxis: {
+                            renderer: $.jqplot.CategoryAxisRenderer,
+                            ticks: descmes,
+                            //label: "MESES",
+                            tickOptions:{textColor : 'rgb(39, 125, 175)', fontSize: '9pt'}
+                        },
+                        yaxis: {
+                            label: "Valor (R$)",
+                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+                            tickOptions:{textColor : 'rgb(39, 125, 175)', fontSize: '9pt'}
+                        }
+                    }
+                    //highlighter: { show: true }
+                }); 
+        }); // fim gerar graficos        
+         
+// fim Gerar Graficos **********************************************************************************  
+
+/*
+                var descitem2 = [];
+                var geral = $.ajax({
+                    async: false,
+                    url: 'PersonActionsPagedSorted.php?action=listitem&tipo=geral',
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.length) {                        
+                            descitem2 = data[0];
+                         }
+                    }            
+                });
+              
+                var descsubitem2 = [];
+                var geral2 = $.ajax({
+                    async: false,
+                    url: 'PersonActionsPagedSorted.php?action=listsubitem&tipo=geral',
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.length) {                        
+                            descsubitem2 = data[0];
+                         }
+                    }            
+                });                            
+*/
+             
+         
+            $('table').footable();
+           // $('button').button();
+        
+        });  // fecha documento ready  class="filtering">
+                    
+
+    </script>  
+
+      <div id="tabs"><div class="displayTitulo">syswebDESPESAS 1.0</div> 
+      <ul>
+ 
+        <li id="li1"><a href="#tabs-1">Lancamentos</a></li>  
+        <li id="li2"><a href="#tabs-2">Tabela</a></li>
+        <li id="li3"><a href="#tabs-3">Graficos</a></li>
+         <div class="displayLogin"><?php echo 'Usuario: '.$objLogin->getLogin(). '<br>'?>&nbsp;|&nbsp;<a href="painel.php">Inicio</a>&nbsp;|&nbsp;<a href="sair.php">Sair</a>&nbsp;|&nbsp;</div> 
+         
+      </ul>
+
+      <div id="tabs-1">   
+          <div> 
+              <form>
+                Item: <select id="listitem"  name="listitem"> <option selected="selected" value="0">Todos</option> </select>
+                Subitem: <select style="width: 150px;" id="listsubitem" name="listsubitem"> <option selected="selected" value="0">Todos</option> </select>
+                Mes: 
+                <select id="dtdespesa" name="dtdespesa">
+                    <option selected="selected" value="0">Todos</option>
+                    <option value="01">Janeiro</option>
+                    <option value="02">Fevereiro</option>
+                    <option value="03">Março</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Maio</option>
+                    <option value="06">Junho</option>
+                    <option value="07">Julho</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Setmbro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                </select>
+                Ano: 
+                <select id="anodespesa" name="anodespesa">
+                    <option value="0">Todos</option>
+                    <option value="2013" selected="selected" >2013</option>
+                    <option value="2014">2014</option>
+                    <option value="2015">2015</option>
+                    <option value="2016">2016</option>
+                    <option value="2017">2017</option>
+                    <option value="2018">2018</option>
+                    <option value="2019">2019</option>
+                    <option value="2020">2020</option>
+                </select>                
+                <button id="LoadRecordsButton">Pesquisar</button>
+              </form>
+        </div> 
+        <div id="PeopleTableContainer" style="width: 793px;"></div>
+      </div>         
+      <div id="tabs-2" >
+          <div> 
+            <form>
+                Mes: 
+                <select id="mesTab1" name="mesTab1">
+                    <option selected="selected" value="0">Todos</option>
+                    <option value="01">Janeiro</option>
+                    <option value="02">Fevereiro</option>
+                    <option value="03">Março</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Maio</option>
+                    <option value="06">Junho</option>
+                    <option value="07">Julho</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Setmbro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                </select>
+                Ano: 
+                <select id="anoTab1" name="anoTab1">
+                    <option value="0">Todos</option>
+                    <option value="2013" selected="selected" >2013</option>
+                    <option value="2014">2014</option>
+                    <option value="2015">2015</option>
+                    <option value="2016">2016</option>
+                    <option value="2017">2017</option>
+                    <option value="2018">2018</option>
+                    <option value="2019">2019</option>
+                    <option value="2020">2020</option>
+                </select>                 
+                <button type="submit" id="ButtonTab1">Pesquisar</button>
+            </form>
+        </div>           
+        <div id="tab1" style="overflow: scroll;" ></div>           
+      </div>
+      <div id="tabs-3">   
+        <br><br>
+        <div id="chart4" ></div><br><br>    
+        <div id="chart3" ></div><br><br>
+        <div id="chart2" ></div><br><br>  
+      </div>         
+    </div>  
+
+  </body>
+</html>
+
+
+<table class="table">
+<tr>
+    <th>Name</th>
+    <th>Description</th>
+    <th>&nbsp;</th>
+</tr>
+<?php foreach ($products as $product) : ?>
+<tr>
+    <td><?php echo $this->escapeHtml($product->name);?></td>
+    <td><?php echo $this->escapeHtml($product->description);?></td>
+    <td>
+        <a href="<?php echo $this->url('product',
+            array('action'=>'edit', 'id' => $product->id));?>">Edit</a>
+        <a href="<?php echo $this->url('product',
+            array('action'=>'delete', 'id' => $product->id));?>">Delete</a>
+    </td>
+</tr>
+<?php endforeach; ?>
+</table>
