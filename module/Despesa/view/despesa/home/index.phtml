@@ -1,0 +1,45 @@
+<div id="PeopleTableContainer" style="width: 600px;"></div>
+        <?php $this->inlineScript()->captureStart() ?>
+
+
+		$(document).ready(function () {
+
+		    //Prepare jTable
+			$('#PeopleTableContainer').jtable({
+				title: 'Table of people',
+				actions: {
+					listAction: 'PersonActions.php?action=list',
+					createAction: 'PersonActions.php?action=create',
+					updateAction: 'PersonActions.php?action=update',
+					deleteAction: 'PersonActions.php?action=delete'
+				},
+				fields: {
+					PersonId: {
+						key: true,
+						create: false,
+						edit: false,
+						list: false
+					},
+					Name: {
+						title: 'Author Name',
+						width: '40%'
+					},
+					Age: {
+						title: 'Age',
+						width: '20%'
+					},
+					RecordDate: {
+						title: 'Record date',
+						width: '30%',
+						type: 'date',
+						create: false,
+						edit: false
+					}
+				}
+			});
+
+			//Load person list from server
+			$('#PeopleTableContainer').jtable('load');
+
+		});
+                <?php $this->inlineScript()->captureEnd() ?>

@@ -13,7 +13,7 @@ class HomeController extends AbstractActionController
     # action index
     public function indexAction()
     {
-    $objectManager = $this
+/*    $objectManager = $this
         ->getServiceLocator()
         ->get('Doctrine\ORM\EntityManager');
 
@@ -24,19 +24,21 @@ class HomeController extends AbstractActionController
     $despesa->coditem = 1;
     $despesa->codsubitem = 1;    
 
-    $objectManager->persist($despesa);
-    $objectManager->flush();    
+ //   $objectManager->persist($despesa);
+  //  $objectManager->flush();    
    
     $item = new \Despesa\Entity\Item();
     $item->descitem = 'Item1';
     $item->codsubitem = 1;
 
-    $objectManager->persist($item);
-    $objectManager->flush();
-    die(var_dump($item)); 
-    die(var_dump($despesa));
+ //   $objectManager->persist($item);
+ //   $objectManager->flush();
+    
+    $result = $this->getEntityManager()->getRepository('Despesa\Entity\Despesa')->findAll();
+    die(var_dump($result)); 
+   // die(var_dump($despesa));
        
- 
+ */
     }
 
 }

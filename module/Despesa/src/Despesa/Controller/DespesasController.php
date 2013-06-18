@@ -39,39 +39,18 @@ class DespesasController extends AbstractActionController
     // 
     public function listlancamentosAction()
     {
-		$coditem        = $_POST["coditem"]; 
-                $dtdespesa      = $_POST["dtdespesa"];
-                $anodespesa     = $_POST["anodespesa"]; 
-                $codsubitem     = $_POST["codsubitem"]; 
-                $jtSorting      = $_GET["jtSorting"] ; 
-                $jtPageSize     = $_GET["jtPageSize"]; 
-                $jtStartIndex   = $_GET["jtStartIndex"]; 
-                
-		if ($_POST["coditem"]    > 0)  { $where = $where . " and coditem = " . $_POST["coditem"] . " ";};
-                if ($_POST["codsubitem"] > 0)  { $where = $where . " and codsubitem = " . $_POST["codsubitem"] . " ";};                
-                if ($_POST["dtdespesa"]  > 0)  { $where = $where . " and (EXTRACT(MONTH FROM dtdespesa) = ".$dtdespesa.") ";};                
-                if ($_POST["anodespesa"] > 0)  { $where = $where . " and (EXTRACT(YEAR FROM dtdespesa) = ".$anodespesa.") ";}; 
-                //Get record count
-		$result = pg_query("SELECT COUNT(*) AS RecordCount FROM despesa  where id > 0 ". $where. " ");
-		$row = pg_fetch_array($result);
-		$recordCount = $row['recordcount']; // sempre em minusculo no postgresql
+//Get records from database
+$despesas = $this->getEntityManager()->getRepository('Despesa\Entity\Despesa')->findBy(array('id' => 1));
+$despesas = $this->getEntityManager()->createQuery("select d.id, d.valdespesa, d.codsubitem, d.descdespesa from Despesa\Entity\Despesa d where d.id = 1 ");
 
-		//Get records from database                
-                $result = pg_query("SELECT * FROM despesa where id > 0  ". $where. " ORDER BY " . $_GET["jtSorting"] . " LIMIT " . $_GET["jtPageSize"] . " OFFSET " . $_GET["jtStartIndex"]  .";");
-		
-		//Add all records to an array
-		$rows = array();
-		while($row = pg_fetch_array($result))
-		{
-		    $rows[] = $row;
-		}
+$result = $despesas->getArrayResult();
 
-		//Return result to jTable
-		$jTableResult = array();
-		$jTableResult['Result'] = "OK";
-		$jTableResult['TotalRecordCount'] = $recordCount;
-		$jTableResult['Records'] = $rows;
-		print json_encode($jTableResult);        
+//Return result to jTable
+$jTableResult = array();
+$jTableResult['Result'] = "OK";
+$jTableResult['Records'] = $result;
+print json_encode($jTableResult);
+//die(var_dump($result)); 
     }
 
     // 
