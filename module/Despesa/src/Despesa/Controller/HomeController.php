@@ -5,19 +5,34 @@ namespace Despesa\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
 use Doctrine\ORM\EntityManager;     // Add this line
+use Despesa\Entity\Item;
 
 
 class HomeController extends AbstractActionController
 {
-
+    public function getEntityManager()
+    {
+        if (null === $this->em) {
+            $this->em = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager');
+        }
+        return $this->em;
+    }  
+    
+    
     # action index
     public function indexAction()
     {
-/*    $objectManager = $this
+    $objectManager = $this
         ->getServiceLocator()
         ->get('Doctrine\ORM\EntityManager');
-
-    $despesa = new \Despesa\Entity\Despesa();
+   
+$itemRepository = $objectManager->getRepository('Despesa\Entity\Item');
+$items = $itemRepository->findAll();
+//  $items = $objectManager->getRepository('Despesa\Entity\Item');
+ // $items->
+$subitems = $objectManager->getRepository('Despesa\Entity\Subitem')->findAll();
+$despesas = $this->getEntityManager()->getRepository('Despesa\Entity\Despesa')->findAll();
+/*    $despesa = new \Despesa\Entity\Despesa();
     $despesa->descdespesa = 'Despesa1';
     $despesa->dtdespesa = new \DateTime("now");
     $despesa->valdespesa = 100;
@@ -26,19 +41,35 @@ class HomeController extends AbstractActionController
 
  //   $objectManager->persist($despesa);
   //  $objectManager->flush();    
-   
-    $item = new \Despesa\Entity\Item();
-    $item->descitem = 'Item1';
-    $item->codsubitem = 1;
+*/   
+ /*   $item = new \Despesa\Entity\Item();
+    $item->descitem = 'Item 9';
 
- //   $objectManager->persist($item);
- //   $objectManager->flush();
+    $subitem = new \Despesa\Entity\Subitem();
+    $subitem->descsubitem = 'Subitem 9';
+    $subitem->item = $item;    
+ 
+    $despesa = new \Despesa\Entity\Despesa();
+    $despesa->descdespesa = 'Despesa 1';
+    $despesa->valdespesa = 100;
+    $despesa->dtdespesa = new \DateTime("now");
+    $despesa->subitem = $subitem;  
+ /*   
+    $objectManager->persist($item);
+    $objectManager->flush();
     
-    $result = $this->getEntityManager()->getRepository('Despesa\Entity\Despesa')->findAll();
-    die(var_dump($result)); 
-   // die(var_dump($despesa));
+    $objectManager->persist($subitem);
+   // $objectManager->flush();    
+    
+  //  $objectManager->persist($despesa);
+   // $objectManager->flush();   //   
+    */
+   // $result = $this->getEntityManager()->getRepository('Despesa\Entity\Despesa')->findAll();
+    //var_dump($subitems); 
+     var_dump($subitems); 
+   //var_dump($despesas);
        
- */
+ 
     }
 
 }

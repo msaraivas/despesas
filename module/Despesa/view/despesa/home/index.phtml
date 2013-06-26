@@ -1,6 +1,5 @@
 <div id="PeopleTableContainer" style="width: 600px;"></div>
-        <?php $this->inlineScript()->captureStart() ?>
-
+        <script type="text/javascript">
 
 		$(document).ready(function () {
 
@@ -8,10 +7,10 @@
 			$('#PeopleTableContainer').jtable({
 				title: 'Table of people',
 				actions: {
-					listAction: 'PersonActions.php?action=list',
-					createAction: 'PersonActions.php?action=create',
-					updateAction: 'PersonActions.php?action=update',
-					deleteAction: 'PersonActions.php?action=delete'
+					listAction:   <?php echo $this->url('despesas', array("action" => "listlancamentos")); ?>,
+					createAction: <?php echo $this->url('despesas', array("action" => "listlancamentos")); ?>,
+					updateAction: <?php echo $this->url('despesas', array("action" => "update")); ?>,
+					deleteAction: <?php echo $this->url('despesas', array("action" => "delete")); ?>,
 				},
 				fields: {
 					PersonId: {
@@ -42,4 +41,4 @@
 			$('#PeopleTableContainer').jtable('load');
 
 		});
-                <?php $this->inlineScript()->captureEnd() ?>
+                </script>

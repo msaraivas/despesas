@@ -4,18 +4,21 @@
 namespace Despesa\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
-use Zend\View\Model\ViewModel; 
+use Zend\View\Model\ViewModel;
+use Zend\View\Model\JsonModel;
 use Doctrine\ORM\EntityManager;
 use Despesa\Entity\Despesa;
+use Despesa\Entity\Subitem;
+use Despesa\Entity\Item;
 
 
 
 class DespesasController extends AbstractActionController
 {
 
-/**             
- * @var Doctrine\ORM\EntityManager
- */                
+    /**             
+     * @var Doctrine\ORM\EntityManager
+     */                
     protected $em;
 
   
@@ -32,402 +35,180 @@ class DespesasController extends AbstractActionController
     public function indexAction()
     {        
         return new ViewModel(array(
-            'despesas' => $this->getEntityManager()->getRepository('Despesa\Entity\Despesa')->findAll() 
+            //'despesas' => $this->getEntityManager()->getRepository('Despesa\Entity\Despesa')->findAll(),
+           // 'despesas' => $this->getEntityManager()->createQuery('SELECT d FROM Despesa\Entity\Despesa d WHERE d.id > 0 ')
         ));            
     }
 
     // 
-    public function listlancamentosAction()
+    public function listdespesasAction()
     {
-//Get records from database
-$despesas = $this->getEntityManager()->getRepository('Despesa\Entity\Despesa')->findBy(array('id' => 1));
-$despesas = $this->getEntityManager()->createQuery("select d.id, d.valdespesa, d.codsubitem, d.descdespesa from Despesa\Entity\Despesa d where d.id = 1 ");
-
-$result = $despesas->getArrayResult();
-
-//Return result to jTable
-$jTableResult = array();
-$jTableResult['Result'] = "OK";
-$jTableResult['Records'] = $result;
-print json_encode($jTableResult);
-//die(var_dump($result)); 
-    }
-
-    // 
-    public function listitemAction()
-    {
- 		//Get records from database
-		$result = pg_query("SELECT * FROM item ORDER BY descitem " );
-		//$result = pg_query("SELECT * FROM despesa ORDER BY " . $_GET["jtSorting"] . " LIMIT " .  $_GET["jtPageSize"]  .  " OFFSET " . $_GET["jtStartIndex"] . ";");
-		
-		//Add all records to an array
-		$rows = array();
-		while($row = pg_fetch_array($result))
-		{
-                    $rows[$row['id']] = $row['descitem'];                     
-		}                
+        //Get records from database
+        $jtSorting      = $_GET["jtSorting"] ; 
+        $jtPageSize     = $_GET["jtPageSize"]; 
+        $jtStartIndex   = $_GET["jtStartIndex"]; 
                 
-                if ($_GET["tipo"] == 'geral') 
-                {
-                    $rows1[0] = array_values($rows);
-                    $rows1[1] = array_keys($rows);
-                    print json_encode(array_values($rows1));
-                }
-                else if ($_GET["tipo"] == 'lanc'){
-                    //Return result to jTable
-                    $jTableResult = array();
-                    print json_encode($rows);
-                }        
+        $query = $this->getEntityManager()->createQuery('SELECT d, s, i FROM Despesa\Entity\Despesa d JOIN d.subitem s JOIN s.item i ');// INDEX BY DESC '); //) . $_GET["jtSorting"]);
+        
+        $i = 0;
+        //$result = $despesas->getResult();
+        $result = $query->getArrayResult();
+        $recordCount = count($result);
+        
+        $query = $this->getEntityManager()->createQuery('SELECT d, s, i FROM Despesa\Entity\Despesa d JOIN d.subitem s JOIN s.item i ORDER BY d.'.$_GET["jtSorting"] );// INDEX BY DESC '); //) . $_GET["jtSorting"]);
+        $query->setMaxResults($_GET["jtPageSize"]);
+        $query->setFirstResult($_GET["jtStartIndex"]); 
+        $result = $query->getArrayResult();        
+        
+        // formata alguns campos do array  
+        foreach ($result as $row) {
+            $result[$i]['dtdespesa']   =  $result[$i]['dtdespesa']->format('Y-m-d');
+            $result[$i]['iditem']      =  $result[$i]['subitem']['item']['id'];  
+            $result[$i]['idsubitem']   =  $result[$i]['subitem']['id'];                        
+            $i = $i +1;           
+        }
+       
+        //Return result to jTable
+        $jTableResult = array();
+        $jTableResult['Result'] = "OK";
+        $jTableResult['TotalRecordCount'] = $recordCount;
+        $jTableResult['Records'] = $result;
+        return new JsonModel($jTableResult);
+      // die(var_dump($despesas2)); 
     }
 
     // 
-    public function listsubitemAction()
+    public function listoptionitemAction()
     {
- 		//Get records from database
-		$result = pg_query("SELECT id, descsubitem FROM subitem where coditem  = ".$_GET["coditem"]. " ORDER BY descsubitem " );
-		//$result = pg_query("SELECT * FROM despesa ORDER BY " . $_GET["jtSorting"] . " LIMIT " .  $_GET["jtPageSize"]  .  " OFFSET " . $_GET["jtStartIndex"] . ";");  
-		
-		//Add all records to an array
-		$rows = array();
-                   $rows[0] = 'Todos';  
-		while($row = pg_fetch_array($result))
-		{
-                    $rows[$row['id']] = $row['descsubitem'];                     
-		}
-
-                if ($_GET["tipo"] == 'geral') 
-                {
-                    $rows1[0] = array_values($rows);
-                    $rows1[1] = array_keys($rows);
-                    print json_encode(array_values($rows1));
-                }
-                else if ($_GET["tipo"] == 'lanc'){
-                    //Return result to jTable
-                    $jTableResult = array();
-                    print json_encode($rows);
-                }        
+        //Get records from database
+        //$where = ' coditem  = ".$_GET["coditem"]. " ORDER BY descsubitem " );
+        $query = $this->getEntityManager()->createQuery('SELECT i FROM Despesa\Entity\Item i ORDER BY i.id  ');
+	$result = $query->getArrayResult();
+        
+        //Add all records to an array
+        $rows = array();   
+        foreach ($result as $row) {
+            $rows[]= array('DisplayText' => $row['descitem'], 'Value' => $row['id']);
+        }       
+                  
+        //Return result to jTable
+        $jTableResult = array();
+        $jTableResult['Result'] = "OK";
+        $jTableResult['Options'] = $rows;
+        return new JsonModel($jTableResult);   
     }
 
     // 
-    public function listtotalmesAction()
+    public function listoptionsubitemAction()
     {
- 		//Get records from database
-		$result = pg_query("SELECT EXTRACT(MONTH FROM dtdespesa) as mes, sum(valdespesa) as valor FROM despesa  where EXTRACT(YEAR FROM dtdespesa) = ". $_GET["ano"]. " group by mes " );		
-		$rows = array();                
-                $rows["JAN"] = 0;
-                $rows["FEV"] = 0;  
-                $rows["MAR"] = 0;  
-                $rows["ABR"] = 0;  
-                $rows["MAI"] = 0; 
-                $rows["JUN"] = 0;  
-                $rows["JUL"] = 0;   
-                $rows["AGO"] = 0;   
-                $rows["SET"] = 0;  
-                $rows["OUT"] = 0;  
-                $rows["NOV"] = 0;  
-                $rows["DEZ"] = 0;                   
-                                             
-		while($row = pg_fetch_array($result))
-                {                
-                    switch ($row['mes'])
-                    { 
-                        case 1: $mes = "JAN"; break;
-                        case 2: $mes = "FEV"; break;
-                        case 3: $mes = "MAR"; break;
-                        case 4: $mes = "ABR"; break;
-                        case 5: $mes = "MAI"; break;
-                        case 6: $mes = "JUN"; break;
-                        case 7: $mes = "JUL"; break;
-                        case 8: $mes = "AGO"; break;
-                        case 9: $mes = "SET"; break;
-                        case 10: $mes = "OUT"; break;
-                        case 11: $mes = "NOV"; break;
-                        case 12: $mes = "DEZ"; break;
-                    }
-                    $rows[$mes] = (float)$row['valor'];  
-		}
-                $rows1[0] = array_values($rows);
-                $rows1[1] = array_keys($rows);                
-                print json_encode(array_values($rows1));        
+        //Get records from database
+        //$result = pg_query("SELECT id, descsubitem FROM subitem where coditem  = ".$_GET["coditem"]. " ORDER BY descsubitem " );
+        $iditem = $this->params()->fromRoute('id', $default);
+        if      ($iditem == 0)    {$where = ' ';} 
+        else if ($iditem != 0)    {$where =  ' WHERE s.item = ' .$iditem; }; 
+        //$where = ' ';
+        $query = $this->getEntityManager()->createQuery('SELECT s, i FROM Despesa\Entity\Subitem s JOIN s.item i '.$where);// INDEX BY DESC '); //) . $_GET["jtSorting"]);
+	$result = $query->getArrayResult();
+        
+        //Add all records to an array
+        $rows = array();   
+        foreach ($result as $row) {
+            $rows[]= array('DisplayText' => $row['descsubitem'].'-'.$row['item']['id'], 'Value' => $row['id']);
+        }       
+                  
+        //Return result to jTable
+        $jTableResult = array();
+        $jTableResult['Result'] = "OK";
+        $jTableResult['Options'] = $rows;
+        return new JsonModel($jTableResult); 
+        var_dump($result); 
     }
 
-    // 
-    public function listtotalitemAction()
-    {
- 		//Get records from database
-		if($_GET["tipo"] == "anual")
-                    {$result = pg_query("SELECT  descitem, sum(valdespesa) as valor FROM despesa, item where item.id = coditem and EXTRACT(YEAR FROM dtdespesa) = ". $_GET["ano"]. "   group by descitem " );}
-		else if ($_GET["tipo"] == "mensal")
-                    {$result = pg_query("SELECT  descitem, sum(valdespesa) as valor FROM despesa, item where item.id = coditem  and  EXTRACT(MONTH FROM dtdespesa)  = ".$_GET["mes"]." and EXTRACT(YEAR FROM dtdespesa) = ". $_GET["ano"]. " group by descitem " );}		
-		//Add all records to an array
-		$rows = array();      
-		while($row = pg_fetch_array($result))
-		{
-                    $rows[$row['descitem']] = (float)$row['valor'];  
-		}                               
-                $rows1[0] = array_values($rows);
-                $rows1[1] = array_keys($rows);                
-                print json_encode($rows1);         
-    }
-
-    // 
-    public function listtabelaAction()
-    {
-            for ($i = 1; $i <= 12; $i++) 
-            {   
-                $rows[$i] = array('valtotmes' => 0,  'qtditem' => 0);//'descitem' => 'xxxxxx', 'valitem' => 0, array('descsubitem' =>'zzzzzz', 'valsubitem' => 1)));           
-                $itensGeral = pg_query("SELECT * FROM item ORDER BY descitem " );
-                $qtdItem = pg_query("SELECT COUNT(*) AS qtditem FROM item");
-                $qtdItem = pg_fetch_array($qtdItem);
-                $rows[$i]['qtditem'] = $qtdItem['qtditem']; 
-                
-                while($item = pg_fetch_array($itensGeral))
-                {  
-                    $rows[$i]['itens'][$item['descitem']] = array('valitem' => 0, 'qtdsubitem' => 0);
-                    $subitensGeral = pg_query("SELECT * FROM subitem where coditem = ". $item['id']. " ORDER BY descsubitem " );
-                    $qtdSubitem = pg_query("SELECT COUNT(*) AS qtdsubitem  FROM subitem where coditem = ". $item['id']);
-                    $qtdSubitem = pg_fetch_array($qtdSubitem);
-                    $rows[$i]['itens'][$item['descitem']]['qtdsubitem'] = $qtdSubitem['qtdsubitem']; 
-                    
-                    while($subitem = pg_fetch_array($subitensGeral))
-                    {    
-                        $rows[$i]['itens'][$item['descitem']]['subitens'][$subitem['descsubitem']] = 0;
-                    }  
-                }
-            }
-/*
-            $itensGeral = pg_query("SELECT * FROM item ORDER BY descitem " );
-            while($item = pg_fetch_array($itensGeral))
-            { 
-                $rowsTotais['valorGeralItem'][$item['descitem']] = 0;    
-            }
-*/
-            $valorItemMeses =  pg_query("SELECT descitem, sum(valdespesa) as valor, EXTRACT(MONTH FROM dtdespesa) as mes FROM despesa, item  where item.id = coditem and EXTRACT(YEAR FROM dtdespesa) = ". $_GET["anoTab1"]. " group by ano, mes, descitem order by descitem" );
-            while($valorItemMes = pg_fetch_array($valorItemMeses))
-            {                      
-                $rows[$valorItemMes['mes']]['itens'][$valorItemMes['descitem']]['valitem'] = $valorItemMes['valor']; 
-            }    
-
-            $valorSubitemMeses =  pg_query("SELECT descsubitem, descitem, sum(valdespesa) as valor, EXTRACT(MONTH FROM dtdespesa) as mes, EXTRACT(YEAR FROM dtdespesa) as ano FROM despesa, subitem, item where  item.id = despesa.coditem and item.id = subitem.coditem and despesa.codsubitem = subitem.id and EXTRACT(YEAR FROM dtdespesa) = ". $_GET["anoTab1"]. " group by ano, mes, descitem, descsubitem order by descsubitem" );
-            while($valorSubitemMes = pg_fetch_array($valorSubitemMeses))
-            {                      
-                $rows[$valorSubitemMes['mes']]['itens'][$valorSubitemMes['descitem']]['subitens'][$valorSubitemMes['descsubitem']] = $valorSubitemMes['valor']; 
-            }  
-            
-            $valorTotalMeses  =  pg_query("SELECT EXTRACT(MONTH FROM dtdespesa) as mes, sum(valdespesa) as valor FROM despesa  where  EXTRACT(YEAR FROM dtdespesa) = ". $_GET["anoTab1"]. " group by mes order by mes" );   
-            while($valorTotalMes = pg_fetch_array($valorTotalMeses))
-            {                      
-                $rows[$valorTotalMes['mes']]['valtotmes'] = $valorTotalMes['valor']; 
-            } 
-            
-            $valorTotalItens =  pg_query("SELECT descitem, sum(valdespesa) as valor FROM despesa, item  where item.id = coditem and EXTRACT(YEAR FROM dtdespesa) = ". $_GET["anoTab1"]. " group by descitem order by descitem" );               
-            while($valorTotalItem = pg_fetch_array($valorTotalItens))
-            {                      
-               // $rows['valtotItem'][$valorTotalItem['descitem']] = $valorTotalItem['valor']; 
-            }
-                          
-            $i = (int)$_GET["mesTab1"]; 
-            
-            if ($i > 0) {
-
-                echo ' <table id=tabMensal class="footable" style="width: 500px;">
-                           <thead >
-                               <tr>                       
-                                    <th rowspan = 2 >DESPESAS</th>
-                                    <th rowspan = 2 >SUBITENS</th>                        
-                                    <th>Valor</th><th>Total'.$i2.'</th>                                        
-                               </tr>
-                           </thead> 
-                           <tfoot>
-                                <tr>
-                                    <th colspan = 2 rowspan = 2 >TOTAL DESPESAS</th>
-                                    <th colspan = 2 >'.$rows[$i]['valtotmes'].'</th>  
-                                </tr>
-                            </tfoot>
-                            <tbody >
-                            <tr>';   
-                
-                $itens    = array_keys($rows[1]['itens']);               
-                for($j=0; $j<count($itens);$j++) 
-                {
-                    $subitens = array_keys($rows[1]['itens'][$itens[$j]]['subitens']);
-                    $linhas = count($subitens);
-                    for($l=0; $l<$linhas;$l++) 
-                    { 
-                        if ($l == 0) 
-                        {
-                            echo '<td rowspan='.$linhas.'>'.$itens[$j].'</td><td>'.$subitens[$l].'</td>';
-                            echo '<td>'.$rows[$i]['itens'][$itens[$j]]['subitens'][$subitens[$l]].'</td><td rowspan='.$linhas.'>'.$rows[$i]['itens'][$itens[$j]]['valitem'].'</td>';      
-                        }    
-                        else if ($l > 0)  
-                        {      
-                            echo '<tr><td>'.$subitens[$l].'</td>';
-                            echo '<td>'.$rows[$i]['itens'][$itens[$j]]['subitens'][$subitens[$l]].'</td>';                            
-                        }
-                    } 
-                    echo '</tr>';
-                } 
-                echo '</tbody> ';  
-                echo '</table>';
-            }        
-
-            else if ($i == 0){
-
-                $valorItemMeses =  pg_query("SELECT descitem, sum(valdespesa) as valor, EXTRACT(MONTH FROM dtdespesa) as mes FROM despesa, item  where item.id = coditem and EXTRACT(YEAR FROM dtdespesa) = ". $_GET["anoTab1"]. " group by mes, descitem order by descitem" );
-                while($valorItemMes = pg_fetch_array($valorItemMeses))
-                {                      
-                    $rows[$valorItemMes['mes']]['itens'][$valorItemMes['descitem']]['valitem'] = $valorItemMes['valor']; 
-                }    
-
-                $valorSubitemMeses =  pg_query("SELECT descsubitem, descitem, sum(valdespesa) as valor, EXTRACT(MONTH FROM dtdespesa) as mes FROM despesa, subitem, item where  item.id = despesa.coditem and item.id = subitem.coditem and despesa.codsubitem = subitem.id and EXTRACT(YEAR FROM dtdespesa) = ". $_GET["anoTab1"]. " group by mes, descitem, descsubitem order by descsubitem" );
-                while($valorSubitemMes = pg_fetch_array($valorSubitemMeses))
-                {                      
-                    $rows[$valorSubitemMes['mes']]['itens'][$valorSubitemMes['descitem']]['subitens'][$valorSubitemMes['descsubitem']] = $valorSubitemMes['valor']; 
-                } 
-
-                $valorTotalMeses  =  pg_query("SELECT EXTRACT(MONTH FROM dtdespesa) as mes, sum(valdespesa) as valor FROM despesa where  EXTRACT(YEAR FROM dtdespesa) = ". $_GET["anoTab1"]. " group by mes order by mes" );   
-                while($valorTotalMes = pg_fetch_array($valorTotalMeses))
-                {                      
-                    $rows[$valorTotalMes['mes']]['valtotmes'] = $valorTotalMes['valor']; 
-                } 
-
-                $valorTotalItens =  pg_query("SELECT descitem, sum(valdespesa) as valor FROM despesa, item  where item.id = coditem and EXTRACT(YEAR FROM dtdespesa) = ". $_GET["anoTab1"]. "  group by descitem order by descitem" );             
-                while($valorTotalItem = pg_fetch_array($valorTotalItens))
-                {                      
-                   // $rows['valtotItem'][$valorTotalItem['descitem']] = $valorTotalItem['valor']; 
-                }
-
-
-                echo ' <table id=tabGeral class="footable" >
-                           <thead>
-                               <tr>                       
-                                    <th rowspan = 2 >DESPESAS</th><th rowspan = 2>SUBITENS</th>
-                                    <th colspan = 2 >Janeiro</th>
-                                    <th colspan = 2 >Fevereiro</th>
-                                    <th colspan = 2 >Março</th>
-                                    <th colspan = 2 >Abril</th>
-                                    <th colspan = 2 >Maio</th>
-                                    <th colspan = 2 >Junho</th>
-                                    <th colspan = 2 >Julho</th>
-                                    <th colspan = 2 >Agosto</th>
-                                    <th colspan = 2 >Setembro</th>
-                                    <th colspan = 2 >Outubro</th>
-                                    <th colspan = 2 >Novembro</th>
-                                    <th colspan = 2 >Dezembro</th>
-                                    <th rowspan = 2 >Subitens</th><th rowspan = 2>DESPESAS</th>
-                               </tr>';
-                for($i=1; $i<=12;$i++)
-                {
-                    echo ' <th>Valor</th><th>Total</th>';
-                }                     
-                echo '  </thead> ';                    
-                echo '  <tfoot> '; 
-                echo '      <tr >
-                                <th rowspan = 2  colspan = 2 >TOTAL DESPESA </th>'; 
-                for($i=1; $i<=12;$i++)
-                {
-                    echo '      <th colspan = 2 >'.$rows[$i]['valtotmes'].'</th>'; 
-                } 
-                echo ' <th rowspan = 2  colspan = 2 >TOTAL DESPESA </th>'; 
-                echo '     </tr>';
-                echo '     <tr>   
-                                <th colspan = 2 >Janeiro</th>
-                                <th colspan = 2 >Fevereiro</th>
-                                <th colspan = 2 >Março</th>
-                                <th colspan = 2 >Abril</th>
-                                <th colspan = 2 >Maio</th>
-                                <th colspan = 2 >Junho</th>
-                                <th colspan = 2 >Julho</th>
-                                <th colspan = 2 >Agosto</th>
-                                <th colspan = 2 >Setembro</th>
-                                <th colspan = 2 >Outubro</th>
-                                <th colspan = 2 >Novembro</th>
-                                <th colspan = 2 >Dezembro</th>
-                            </tr>
-                        </tfoot>
-                        <tbody >
-                        <tr>';   
-                $itens    = array_keys($rows[1]['itens']);               
-                for($j=0; $j<count($itens);$j++) 
-                {
-                    $subitens = array_keys($rows[1]['itens'][$itens[$j]]['subitens']);
-                    $linhas = count($subitens);
-                    for($l=0; $l<$linhas;$l++) 
-                    { 
-                        if ($l == 0) 
-                        {
-                            echo '<td rowspan='.$linhas.'>'.$itens[$j].'</td><td>'.$subitens[$l].'</td>';
-                            for($i=1; $i<=12;$i++)
-                            {
-                                echo '<td>'.$rows[$i]['itens'][$itens[$j]]['subitens'][$subitens[$l]].'</td><td rowspan='.$linhas.'>'.$rows[$i]['itens'][$itens[$j]]['valitem'].'</td>';                            
-                            }
-                            echo '<td>'.$subitens[$l].'</td><td rowspan='.$linhas.'>'.$itens[$j].'</td>';
-                        }    
-                        else if ($l > 0)  
-                        {      
-                            echo '<tr><td>'.$subitens[$l].'</td>';
-                            for($i=1; $i<=12;$i++)
-                            {
-                                echo '<td>'.$rows[$i]['itens'][$itens[$j]]['subitens'][$subitens[$l]].'</td>';
-                            }
-                            echo '<td>'.$subitens[$l].'</td></tr>';
-                        }
-                    } 
-                    echo '</tr>';
-                } 
-                echo '</tbody> ';        
-                echo '</table>';
-                //print json_encode($subitens);
-                //print_r($rows);
-            }
-    }
-    
     // 
     public function createAction()
     {
 		//Insert record into database
-		$result = pg_query("INSERT INTO despesa(coditem, codsubitem, valdespesa, dtdespesa) VALUES(".$_POST["coditem"].", ".$_POST["codsubitem"] .","  . $_POST["valdespesa"] . ", '". $_POST["dtdespesa"]."')");
-                //$result = pg_query("INSERT INTO despesa(coditem, codsubitem, descdespesa, valdespesa, dtdespesa) VALUES(1,1,1,333,'2012-10-10')");
-		
-		//$result = mysql_query("INSERT INTO despesa(codsubitem, descdespesa, valdespesa, dtdespesa) VALUES(1 , 'teste', 12, 2012-03/26");
-		//$result = mysql_query("INSERT INTO `zf2tutorial`.`despesa` (`id`, `codsubitem`, `descdespesa`, `valdespesa`, `dtdespesa`) VALUES (NULL, '1', 'teste', '14,00', '2013-03-25')");
-		//Get last inserted record (to return to jTable)
-		//$result = pg_query("SELECT * FROM despesa WHERE id = LAST_INSERT_ID();"); // só funciona no mysql esta select
-               // $id = pg_query("SELECT currval('despesa_id_seq')");
-                $result = pg_query("SELECT * FROM despesa WHERE id = currval('despesa_id_seq')"); //.$id);
-		$row = pg_fetch_array($result);
+     //   try
+     //   {
+            //$query = $this->getEntityManager()->find('Despesa\Entity\Subitem', 5); //$_POST["idsubitem"]);
+            //$query = $this->getEntityManager()->createQuery("SELECT s FROM Despesa\Entity\Subitem s WHERE s.id = 5");
+            //$subitem = $query->getResult(); 
+            
+            $items = $this->getEntityManager()->getRepository('Despesa\Entity\Item')->find(1);//$_POST["iditem"]);
+            $subitem = $this->getEntityManager()->getRepository('Despesa\Entity\Subitem')->find(7);//$_POST["idsubitem"]);
+            
+            $data = '11/11/1111'; //$_POST["dtdespesa"];
+            $entity = new \Despesa\Entity\Despesa();
+            $entity->descdespesa = $data;
+            //$entity->dtdespesa = new \DateTime("now");
+            $entity->valdespesa = 500; //$_POST["valdespesa"];
+            $entity->dtdespesa = new \DateTime($data);
+            $entity->subitem = $subitem;
+            $this->getEntityManager()->persist($entity);
+            $this->getEntityManager()->flush(); 
+           // $entity->subitem = $subitem->id;
+            $query = $this->getEntityManager()->createQuery('SELECT d FROM Despesa\Entity\Despesa d  WHERE d.id = '. $entity->id);// INDEX BY DESC '); //) . $_GET["jtSorting"]);
+            $result = $query->getArrayResult();
+            
+        // formata alguns campos do array  
+        foreach ($result as $row) {
+            $result2['dtdespesa']   =  $result[0]['dtdespesa']->format('Y-m-d');
+            $result2['idsubitem']   =  $subitem->id;  
+            $result2['valdespesa']   =  (float)$result[0]['valdespesa'];
+            $result2['id']   =       $result[0]['id'];
+            $result2['descdespesa']   =  $result[0]['descdespesa'];
+            $result2['iditem']      =  $subitem->item->id; 
+           
+        }
+        
+        
+            $jTableResult = array();
+            $jTableResult['Result'] = "OK";
+            $jTableResult['Records'] = $result2;
+            return new JsonModel($jTableResult); 
 
-		//Return result to jTable
-		$jTableResult = array();
-		$jTableResult['Result'] = "OK";
-		$jTableResult['Record'] = $row;
-		print json_encode($jTableResult);        
+      /*      var_dump($data);
+            var_dump($result);
+            var_dump($jTableResult);
+            print json_encode($jTableResult);
+        */
+     /*   } catch (Exception $e) 
+        {
+            $jTableResult = array();
+            $jTableResult['Result'] = "ERROR";
+            $jTableResult['Message'] = $e;
+            return new JsonModel($jTableResult);             
+        } */    
     }
 
     // 
     public function updateAction()
     {
-       // $data1 =  date('YY-MM-DD', strtotime('12/10/2012')); 
-                 
-		//Update record in database
-		//$result = mysql_query("UPDATE despesa SET descdespesa = '" . $_POST["descdespesa"] . "', valdespesa = " . $_POST["valdespesa"] . ", codsubitem = " . $_POST["codsubitem"]. ", dtdespesa = " . date('yy-mm-dd',$_POST["dtdespesa"]). " WHERE id = " . $_POST["id"] . ";");
-                $result = pg_query("UPDATE despesa SET  valdespesa = " . $_POST["valdespesa"] . ", coditem = " . $_POST["coditem"]. ", codsubitem = " . $_POST["codsubitem"]. ", dtdespesa = '" . $_POST["dtdespesa"] . "' WHERE id = " . $_POST["id"] . ";");
-		//Return result to jTable
-		$jTableResult = array();
-		$jTableResult['Result'] = "OK";
-		print json_encode($jTableResult);        
+        //Update from database
+        $query = $this->getEntityManager()->createQuery("UPDATE Despesa\Entity\Despesa d SET d.valdespesa = ".$_POST["valdespesa"]. ", d.dtdespesa = '".$_POST["dtdespesa"]. "'  WHERE d.id = " . $_POST["id"]);
+        $result = $query->getArrayResult();
+        
+        //Return result to jTable . $_POST["id"] .
+        $jTableResult = array();
+        $jTableResult['Result'] = "OK";
+        $jTableResult['Records'] = $result;
+        return new JsonModel($jTableResult); 
+        //var_dump($result); 
     }
 
     // 
     public function deleteAction()
     {
-		//Delete from database
-		$result = pg_query("DELETE FROM despesa WHERE id = " . $_POST["id"] . ";");
+        //Delete from database
+        $query = $this->getEntityManager()->createQuery("DELETE Despesa\Entity\Despesa d WHERE d.id = ". $_POST["id"]);
+        $result = $query->getArrayResult();
 
-		//Return result to jTable
-		$jTableResult = array();
-		$jTableResult['Result'] = "OK";
-		print json_encode($jTableResult);        
+        //Return result to jTable . $_POST["id"] .
+        $jTableResult = array();
+        $jTableResult['Result'] = "OK";
+        $jTableResult['Records'] = $result;
+        return new JsonModel($jTableResult); 
+        //var_dump($query);        
     }    
 
 }

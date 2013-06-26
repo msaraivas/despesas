@@ -30,7 +30,7 @@ return array(
                     'route'    => '/despesas[/:action][/:id]',
                     'constraints' => array(
                         'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
-                        'id'     => '[0-9]+',
+                       // 'id'     => '[0-9]+',
                     ),
                     'defaults' => array(
                         'controller' => 'DespesasController',
@@ -64,6 +64,9 @@ return array(
         ),
         'template_path_stack' => array(
             __DIR__ . '/../view',
+        ),
+        'strategies' => array(
+            'ViewJsonStrategy',
         ),
     ),
     

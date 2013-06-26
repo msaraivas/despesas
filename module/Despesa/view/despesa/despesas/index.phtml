@@ -1,0 +1,262 @@
+    <style>
+        div.filtering
+        {
+            border: 1px solid #999;
+            margin-bottom: 5px;
+            padding: 10px;
+            background-color: #EEE;
+            width: 680px;
+            font-size: 12px;
+        }
+        div.litabs
+        {
+            font-size: 14px;
+        }           
+    </style>
+    
+  <style>
+  .ui-tabs-vertical { width: 50em; }
+  .ui-tabs-vertical .ui-tabs-nav { padding: .2em .1em .2em .2em; float: left; width: 8em; }
+  .ui-tabs-vertical .ui-tabs-nav li { clear: left; width: 100%; border-bottom-width: 1px !important; border-right-width: 0 !important; margin: 0 -1px .2em 0; }
+  .ui-tabs-vertical .ui-tabs-nav li a { display:block; }
+  .ui-tabs-vertical .ui-tabs-nav li.ui-tabs-active { padding-bottom: 0; padding-right: .1em; border-right-width: 1px; border-right-width: 1px; }
+  .ui-tabs-vertical .ui-tabs-panel { padding: 1em; float: right; width: 40em;}
+  </style>    
+
+        <script>
+            $(function() {
+                //$( "#tabscli" ).tabs();
+                $( "#tabscli" ).tabs().addClass( "ui-tabs-vertical ui-helper-clearfix" );
+                $( "#tabs li" ).removeClass( "ui-corner-top" ).addClass( "ui-corner-left" );
+            });
+        </script>     
+
+    <div id="tabs-1">  
+        <div id="tabscli"> 
+            <div class="litabs">
+                <ul> 
+                    <li id="li21"><a href="#tabscli-1">Listagem</a></li>  
+                    <li id="li22"><a href="#tabscli-2">Dados</a></li>  
+                    <li id="li23"><a href="#tabscli-3">Processos</a></li> 
+                </ul>
+            </div>
+         
+            <div id="tabscli-1">                
+                <div class="filtering">
+                    <form>
+                        <p>Depto: 
+                        <select id="mes" name="inddepto">
+                                <option selected="selected" value="0">Todos</option>
+                                <option value="1">IBAMA</option>
+                                <option value="2">CETESB</option>
+                        </select>
+                        Serviços: 
+                        <select id="mes" name="indservico">
+                                <option selected="selected" value="0">Todos</option>
+                                <option value="1">I11 - Revalidação do Cadastro Técnico Federal perante o IBAMA</option>
+                                <option value="2">Serviço 2</option>
+                                <option value="1">Serviço 3</option>
+                                <option value="2">Serviço 4</option>
+                        </select>  
+                        </p>
+                       <p> CNPJ: <input type="text" name="name" id="cnpj" />
+                        Período: <input type="text" id="datepicker1" />
+                        <input type="text" id="datepicker2" />
+                      <!--  Mês: <select id="mes" name="subitem">
+                                <option selected="selected" value="0">Todos</option>
+                                <option value="1">Jan</option>
+                                <option value="2">Fev</option>
+                                <option value="3">Mar</option>
+                                <option value="4">Abr</option>
+                                <option value="5">Mai</option>
+                                <option value="6">Jun</option>
+                                <option value="7">Jul</option>
+                                <option value="8">Ago</option>
+                                <option value="9">Set</option>
+                                <option value="10">Out</option>
+                                <option value="11">Nov</option>
+                                <option value="12">Dez</option>
+                             </select>
+                      -->
+                         <button type="submit" id="LoadRecordsButton">Pesquisar</button>
+                         </p>
+                    </form>
+                </div> 
+     
+                <div id="DespesaTableContainer" style="width: 700px;"></div>  
+
+                    <script type="text/javascript">
+                        $(document).ready(function () {
+                            //Prepare jTable
+                                $('#DespesaTableContainer').jtable({
+                                        title: 'Clientes',
+                                        paging: true, //Enable paging
+                                        pageSize: 10,
+                                        pageSizes: [5,10,15,20],
+
+                                        sorting: true, //Enable sorting
+                                        defaultSorting: 'd.dtdespesa DESC', //Set default sorting
+                                        selecting: true, //Enable selecting
+                                        //multiselect: true, //Allow multiple selecting
+                                        selectingCheckboxes: true, //Show checkboxes on first column
+                                        //selectOnRowClick: false, //Enable this to only select using checkboxes
+                                        messages: {
+                                                serverCommunicationError: 'An error occured while communicating to the server.',
+                                                loadingMessage: 'Carregando registros...',
+                                                noDataAvailable: 'Nenhum dado disponível!',
+                                                addNewRecord: 'Adicionar Registro',
+                                                editRecord: 'Editar Registro',
+                                                areYouSure: 'Você tem certeza?',
+                                                deleteConfirmation: 'Este registro será deletado. Você tem certeza?',
+                                                save: 'Salvar',
+                                                saving: 'Salvando',
+                                                cancel: 'Cancelar',
+                                                deleteText: 'Deletar',
+                                                deleting: 'Deletando',
+                                                error: 'Erro',
+                                                close: 'Fechar',
+                                                cannotLoadOptionsFor: 'Impossível carregar opçoes para o campo {0}',
+                                                pagingInfo: 'Exibindo {0}-{1} of {2}',
+                                                pageSizeChangeLabel: 'Quantidade de Linhas',
+                                                gotoPageLabel: 'Ir para página',
+                                                canNotDeletedRecords: 'Não pode deletar {0} dos {1} registros!',
+                                                deleteProggress: 'Deletado {0} de {1} registros, processando...'
+                                        },
+                                        actions: {
+                                                listAction:   'http://despesas.local/despesas/listdespesas', 
+                                                createAction: 'http://despesas.local/despesas/create', 
+                                                updateAction: 'http://despesas.local/despesas/update', 
+                                                deleteAction: 'http://despesas.local/despesas/delete', 
+                                        },
+                                        fields: {
+                                                id: {
+                                                    title: 'Cod',
+                                                    key: true,
+                                                    create: false,
+                                                    edit: false
+                                                    //list: false
+                                                },
+                                                iditem: {
+                                                    title: 'Categoria',
+                                                    width: '30%',
+                                                    options: 'http://despesas.local/despesas/listoptionitem',
+                                                    //list: false
+                                                },
+                                                idsubitem: {
+                                                    title: 'Descrição',
+                                                    width: '30%',
+                                                    dependsOn: 'iditem',
+                                                    options: function (data) {
+                                                        if (data.source == 'list') {
+                                                            //Return url of all countries for optimization. 
+                                                            //This method is called for each row on the table and jTable caches options based on this url.
+                                                            return 'http://despesas.local/despesas/listoptionsubitem/0';
+                                                        }
+                                                        //This code runs when user opens edit/create form or changes continental combobox on an edit/create form.
+                                                        //data.source == 'edit' || data.source == 'create'
+                                                        return 'http://despesas.local/despesas/listoptionsubitem/'+data.dependedValues.iditem;
+                                                    }, 
+                                                    //list: false
+                                                },            
+                                                valdespesa: {
+                                                    title: 'Valor',
+                                                    width: '20%'
+                                                },
+                                                descdespesa: {
+                                                    title: 'Descrição',
+                                                    list: false,
+                                                    create: false,
+                                                    edit: false
+                                                },
+                                                dtdespesa: {
+                                                    title: 'Data',
+                                                    width: '20%',
+                                                    type: 'date',
+                                                    displayFormat: 'dd/mm/yy'
+                                                    //create: false,
+                                                  // edit: false
+                                                },
+                                                consulta: {
+                                                    title: ' ',
+                                                    sorting: false,
+                                                    edit: false,
+                                                    create: false,                     
+                                                    //width: '20%'
+                                                    display: function (data) {
+                                                        //Create an image that will be used to open child table
+                                                        var $img = $('<img src="http://despesas.local/img/list_metro.png" title="Consulta" />');
+                                                        //Open child table when user clicks the image
+                                                       // $img.click(function () {return '<b>test</b>'});
+                                                       return $img;
+                                                     },   
+                                                },                                                
+                                        },                
+                                        //Register to selectionChanged event to hanlde events
+                                        selectionChanged: function () {
+                                            //Get all selected rows
+                                            var $selectedRows = $('#DespesaTableContainer').jtable('selectedRows');
+
+                                            $('#SelectedRowList').empty();
+                                            if ($selectedRows.length > 0) {
+                                                //Show selected rows
+                                                $selectedRows.each(function () {
+                                                    var record = $(this).data('record');
+                                                    $('#SelectedRowList').append(
+                                                        '<p><b>id</b>: ' + record.id +
+                                                        '</p><p><b>Razão Social:</b>' + record.dtdespesa +
+                                                        '</p><p><b>CNPJ:</b>' + record.dtdespesa +
+                                                        '</p><p><b>IE:</b>' + record.dtdespesa +
+                                                        '</p><p><b>IM:</b>' + record.dtdespesa +
+                                                        '</p><p><b>PW:</b>' + record.dtdespesa +
+                                                        '</p><p><b>Endereço Principal:</b>:' + record.dtdespesa +
+                                                        '</p><p><b>Endereço Comercial:</b>:' + record.dtdespesa +
+                                                        '</p><p><b>Endereço Cobrança</b>:' + record.dtdespesa +
+                                                        '</p><p><b>CNAE Principal</b>:' + record.dtdespesa +
+                                                        '</p><p><b>CNAE Secundaário</b>:' + record.dtdespesa +
+                                                        '</p><p><b>CNAE Principal</b>:' + record.dtdespesa +
+                                                        '</p><p><b>data</b>:' + record.dtdespesa +
+                                                        '</p><p><b>valor</b>:' + record.valdespesa + '<br /><br /></p>'
+                                                        );
+                                                });
+                                            } else {
+                                                //No rows selected
+                                                $('#SelectedRowList').append('No row selected! Select rows to see here...');
+                                            }
+                                        },
+                                        rowInserted: function (event, data) {
+                                            if (data.record.valdespesa.indexOf('500') >= 0) {
+                                                $('#DespesaTableContainer').jtable('selectRows', data.row);
+                                            }
+                                        }                                                
+
+                                });
+                                //Re-load records when user click 'load records' button.
+                                $('#LoadRecordsButton').click(function (e) {
+                                    e.preventDefault();
+                                    $('#DespesaTableContainer').jtable('load', {
+                                     //   subitem: $('#subitem').val(),
+                                      //  mes: $('#mes').val()
+                                    });
+                                });
+
+                                //Load all records when page is first shown
+                                $('#DespesaRecordsButton').click();
+                        });
+
+                    </script>  
+            </div>
+            <div id="tabscli-2"> 
+                <div><div id="SelectedRowList"></div></div> 
+            </div>
+            <div id="tabscli-3"> 
+                <div>Processos</div> 
+            </div>            
+        </div>               
+    </div>
+    <div id="tabs-2">             
+        <div>Expediente</div>
+    </div>
+    <div id="tabs-3">             
+        <div>Utilitários</div> 
+    </div>    
+</div>

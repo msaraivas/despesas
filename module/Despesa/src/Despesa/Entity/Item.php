@@ -29,23 +29,15 @@ class Item
     /**
      * @ORM\Column(type="string")
      */
-    protected $descitem;  
-      
-    /**
-     * @ORM\OneToMany(targetEntity="Despesa", mappedBy="item")
-     * var Despesa[]
-     **/   
-    protected $despesa;     
+    protected $descitem;          
     
     /**
-     * @ORM\OneToMany(targetEntity="Subitem", mappedBy="item")
-     * var Subitem[]
-     **/   
-    protected $subitem; 
+     * @ORM\OneToMany(targetEntity="Despesa\Entity\Subitem", mappedBy="item")
+     */   
+    protected $subitem = null; 
     
     
     public function __construct() {
-        $this->despesa = new \Doctrine\Common\Collections\ArrayCollection();
         $this->subitem = new \Doctrine\Common\Collections\ArrayCollection();
     }   
     

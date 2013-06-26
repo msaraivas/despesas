@@ -4,7 +4,7 @@ namespace Despesa\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
-
+use Despesa\Entity\Item;
 
 /**
  * Um controle de despesas
@@ -32,16 +32,21 @@ class Subitem
     protected $descsubitem;      
     
     /**
-     * @ORM\ManyToOne(targetEntity="Item", inversedBy="subitem")
-     * @ORM\JoinColumn(name="item_id", referencedColumnName="id")
-     * @var item
-     **/
-    protected $item; 
+     *@ORM\ManyToOne(targetEntity="Despesa\Entity\Item", inversedBy="subitem")
+     *@ORM\JoinColumn(name="item_id", referencedColumnName="id")
+     */
+    protected $item = null; 
     
-    
-    public function __construct() {
-        $this->item = new \Doctrine\Common\Collections\ArrayCollection();
+    /**
+     * @ORM\OneToMany(targetEntity="Despesa\Entity\Despesa", mappedBy="subitem")
+     */
+   protected $despesa = null;
+
+    public function __construct()
+    {
+        $this->despesa = new ArrayCollection();
     }   
+  
     
     /**
      * Magic getter to expose protected properties.

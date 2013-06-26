@@ -14,7 +14,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @property string $descdespesa
  * @property decimal $valdespesa
  * @property datetime $dtdespesa
- * @property int $id
+ * @property int $id * 
  */
 class Despesa 
 {   
@@ -40,19 +40,12 @@ class Despesa
      * @ORM\Column(type="string")
      */
     protected $descdespesa;
-    
+       
     /**
-     * @ORM\ManyToOne(targetEntity="Item", inversedBy="despesa")
-     * @ORM\JoinColumn(name="item_id", referencedColumnName="id")
-     * @var item
-     **/
-    protected $item;    
-    
-    /**
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\ManyToOne(targetEntity="Subitem", inversedBy="despesa")
+     * @ORM\JoinColumn(name="subitem_id", referencedColumnName="id")
      */
-    protected $codsubitem;  
-    
+    protected $subitem;    
     
     /**
      * Magic getter to expose protected properties.
